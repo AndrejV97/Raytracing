@@ -6,23 +6,38 @@
 #include "stb_image_write.h"
 
 #include "vec3.h"
+#include "ray.h"
+
+const unsigned int width = 200;
+const unsigned int height = 100;
+const unsigned int channels = 3;
+
+vec3 color(ray& r)
+{
+	vec3 unit_direction = unit_vector(r.direction());
+	float t = 0.5f * (unit_direction.y() + 1.0f);
+	return (1.0f - t) * vec3(1.0f, 1.0f, 1.0f) + t * vec3(0.5f, 0.7f, 1.0f);
+}
 
 int main()
 {
-	const unsigned int width = 200;
-	const unsigned int height = 100;
-	const unsigned int channels = 3;
+	vec3 lower_left_corner(-2.0f, -1.0f, -1.0f);
+	vec3 horizontal(4.0f, 0.0f, 0.0f);
+	vec3 vertical(0.0f, 2.0f, 0.0f);
+	vec3 origin(0.0f, 0.0f, 0.0f);
 
 	unsigned char data[width * height * 3];
 	for (int y = 0; y < height; ++y)
 	{
 		for (int x = 0; x < width; ++x)
 		{
-			vec3 color(float(x) / float(width), float(y) / float(height), 0.2f);
-
-			int ir = int(255.99f * color[0]);
-			int ig = int(255.99f * color[1]);
-			int ib = int(255.99f * color[2]);
+			float u = float(x) / width;
+			float v = float(y) / height;
+			ray r(origin, lower_left_corner + u * horizontal + v * vertical);
+			vec3 col = color(r);
+			int ir = int(255.99f * col[0]);
+			int ig = int(255.99f * col[1]);
+			int ib = int(255.99f * col[2]);
 
 			data[3 * (y * width + x) + 0] = ir;
 			data[3 * (y * width + x) + 1] = ig;
@@ -30,6 +45,7 @@ int main()
 		}
 	}
 
+	stbi_flip_vertically_on_write(true);
 	stbi_write_png("output.png", width, height, channels, data, width * channels);
 
 	return 0;
