@@ -1,0 +1,10 @@
+.vs/*
+Debug/*
+Release/*
+Raytracing.sln
+
+Raytracing/Debug/*
+Raytracing/Release/*
+Raytracing/Raytracing.vcxproj
+Raytracing/Raytracing.vcxproj.filters
+Raytracing/Raytracing.vcxproj.user
