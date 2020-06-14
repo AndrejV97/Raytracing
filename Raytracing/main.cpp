@@ -14,10 +14,10 @@
 #include "dielectric.h"
 
 
-const unsigned int width = 200;
-const unsigned int height = 100;
+const unsigned int width = 1920;
+const unsigned int height = 1080;
 const unsigned int channels = 3;
-const unsigned int samples = 100;
+const unsigned int samples = 10;
 
 vec3 color(const ray& r, hitable* world, int depth)
 {
@@ -43,26 +43,55 @@ vec3 color(const ray& r, hitable* world, int depth)
 	}	
 }
 
+hitable* random_scene()
+{
+	int n = 500;
+	hitable** list = new hitable * [n + 1];
+	list[0] = new sphere(vec3(0.0f, -1000.0f, 0.0f), 1000.0f, new lambertian(vec3(0.5f, 0.5f, 0.5f)));
+	int i = 1;
+	for (int a = -11; a < 11; ++a)
+	{
+		for (int b = -11; b < 11; ++b)
+		{
+			float choose_mat = random();
+			vec3 center(a + 0.9f * random(), 0.2f, b + 0.9f * random());
+			if ((center - vec3(4.0f, 0.2f, 0.0f)).length() > 0.9f)
+			{
+				if (choose_mat < 0.8f)
+				{
+					list[i++] = new sphere(center, 0.2f, new lambertian(vec3(random() * random(), random() * random(), random() * random())));
+				}
+				else if (choose_mat < 0.95f)
+				{
+					list[i++] = new sphere(center, 0.2f, new metal(vec3(0.5f * (1.0f + random()), 0.5f * (1.0f + random()), 0.5f * (1.0f + random())), 0.5f * random()));
+				}
+				else
+				{
+					list[i++] = new sphere(center, 0.2f, new dielectric(1.5f));
+				}
+			}
+		}
+	}
+
+	list[i++] = new sphere(vec3(0.0f, 1.0f, 0.0f), 1.0f, new dielectric(1.5f));
+	list[i++] = new sphere(vec3(-4.0f, 1.0f, 0.0f), 1.0f, new lambertian(vec3(0.4f, 0.2f, 0.1f)));
+	list[i++] = new sphere(vec3(4.0f, 1.0f, 0.0f), 1.0f, new metal(vec3(0.7f, 0.6f, 0.5f), 0.0f));
+
+	return new hitable_list(list, i);
+}
+
 int main()
 {
-	const unsigned int num_spheres = 5;
-	hitable* list[num_spheres];
-	list[0] = new sphere(vec3(0.0f, 0.0f, -1.0f), 0.5f, new lambertian(vec3(0.1f, 0.2f, 0.5f)));
-	list[1] = new sphere(vec3(0.0f, -100.5f, -1.0f), 100.0f, new lambertian(vec3(0.8f, 0.8f, 0.0f)));
-	list[2] = new sphere(vec3(1.0f, 0.0f, -1.0f), 0.5f, new metal(vec3(0.8f, 0.6f, 0.2f), 0.3f));
-	list[3] = new sphere(vec3(-1.0f, 0.0f, -1.0f), 0.5f, new dielectric(1.5f));
-	list[4] = new sphere(vec3(-1.0f, 0.0f, -1.0f), -0.45f, new dielectric(1.5f));
-
-	vec3 lookfrom(3.0f, 3.0f, 2.0f);
-	vec3 lookat(0.0f, 0.0f, -1.0f);
+	vec3 lookfrom(13.0f, 2.0f, 3.0f);
+	vec3 lookat(0.0f, 0.0f, 0.0f);
 	float aspect = float(width) / float(height);
-	float dist_to_focus = (lookfrom - lookat).length();
-	float aperture = 2.0f;
+	float dist_to_focus = 10.0f;
+	float aperture = 0.1f;
 
-	hitable* world = new hitable_list(list, num_spheres);
+	hitable* world = random_scene();
 	camera cam(lookfrom, lookat, vec3(0.0f, 1.0f, 0.0f), 90.0f / 4.0f, aspect, aperture, dist_to_focus);
 
-	unsigned char data[width * height * 3];
+	unsigned char* data = new unsigned char[width * height * 3];
 	unsigned idx = 0;
 	for (int y = 0; y < height; ++y)
 	{
