@@ -11,8 +11,8 @@
 #include "camera.h"
 
 
-const unsigned int width = 640;
-const unsigned int height = 480;
+const unsigned int width = 200;
+const unsigned int height = 100;
 const unsigned int channels = 3;
 const unsigned int samples = 100;
 
