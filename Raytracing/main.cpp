@@ -8,11 +8,18 @@
 
 #include "sphere.h"
 #include "hitable_list.h"
+#include "camera.h"
 
 
 const unsigned int width = 200;
 const unsigned int height = 100;
 const unsigned int channels = 3;
+const unsigned int samples = 100;
+
+double random()
+{
+	return (double)rand() / RAND_MAX;
+}
 
 vec3 color(const ray& r, hitable* world)
 {
@@ -31,16 +38,12 @@ vec3 color(const ray& r, hitable* world)
 
 int main()
 {
-	vec3 lower_left_corner(-2.0f, -1.0f, -1.0f);
-	vec3 horizontal(4.0f, 0.0f, 0.0f);
-	vec3 vertical(0.0f, 2.0f, 0.0f);
-	vec3 origin(0.0f, 0.0f, 0.0f);
-
 	hitable* list[2];
 	list[0] = new sphere(vec3(0.0f, 0.0f, -1.0f), 0.5f);
 	list[1] = new sphere(vec3(0.0f, -100.5f, -1.0f), 100.0f);
 
 	hitable* world = new hitable_list(list, 2);
+	camera cam;
 
 	unsigned char data[width * height * 3];
 	unsigned idx = 0;
@@ -48,10 +51,16 @@ int main()
 	{
 		for (int x = 0; x < width; ++x)
 		{
-			float u = float(x) / float(width);
-			float v = float(y) / float(height);
-			ray r(origin, lower_left_corner + u * horizontal + v * vertical);
-			vec3 col = color(r, world);
+			vec3 col(0.0f, 0.0f, 0.0f);
+			for (int s = 0; s < samples; ++s)
+			{
+				float u = float(x + random() - 0.5f) / float(width);
+				float v = float(y + random() - 0.5f) / float(height);
+				ray r = cam.get_ray(u, v);
+				col += color(r, world);
+			}
+			col /= float(samples);
+
 			int ir = int(255.99f * col[0]);
 			int ig = int(255.99f * col[1]);
 			int ib = int(255.99f * col[2]);
