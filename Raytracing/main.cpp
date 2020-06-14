@@ -11,8 +11,8 @@
 #include "camera.h"
 
 
-const unsigned int width = 200;
-const unsigned int height = 100;
+const unsigned int width = 640;
+const unsigned int height = 480;
 const unsigned int channels = 3;
 const unsigned int samples = 100;
 
@@ -21,12 +21,24 @@ double random()
 	return (double)rand() / RAND_MAX;
 }
 
+vec3 random_in_unit_sphere()
+{
+	vec3 p;
+	do
+	{
+		p = vec3(random(), random(), random()) - vec3(0.5f, 0.5f, 0.5f);
+	}
+	while (p.squared_length() >= 1.0f);
+	return p;
+}
+
 vec3 color(const ray& r, hitable* world)
 {
 	hit_record rec;
 	if (world->hit(r, 0.0f, std::numeric_limits<float>::max(), rec))
 	{
-		return 0.5f * vec3(rec.normal.x() + 1.0f, rec.normal.y() + 1.0f, rec.normal.z() + 1.0f);
+		vec3 target = rec.p + rec.normal + random_in_unit_sphere();
+		return 0.5f * color(ray(rec.p, target - rec.p), world);
 	}
 	else
 	{
