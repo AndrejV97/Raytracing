@@ -53,8 +53,14 @@ int main()
 	list[3] = new sphere(vec3(-1.0f, 0.0f, -1.0f), 0.5f, new dielectric(1.5f));
 	list[4] = new sphere(vec3(-1.0f, 0.0f, -1.0f), -0.45f, new dielectric(1.5f));
 
+	vec3 lookfrom(3.0f, 3.0f, 2.0f);
+	vec3 lookat(0.0f, 0.0f, -1.0f);
+	float aspect = float(width) / float(height);
+	float dist_to_focus = (lookfrom - lookat).length();
+	float aperture = 2.0f;
+
 	hitable* world = new hitable_list(list, num_spheres);
-	camera cam(vec3(-2.0f, 2.0f, 1.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f), 90.0f / 4.0f, float(width)/float(height));
+	camera cam(lookfrom, lookat, vec3(0.0f, 1.0f, 0.0f), 90.0f / 4.0f, aspect, aperture, dist_to_focus);
 
 	unsigned char data[width * height * 3];
 	unsigned idx = 0;
