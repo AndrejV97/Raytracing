@@ -1,5 +1,6 @@
 #include <iostream>
 #include <limits>
+#include <thread>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -80,29 +81,18 @@ hitable* random_scene()
 	return new hitable_list(list, i);
 }
 
-int main()
+void render(int start_x, int end_x, int start_y, int end_y, unsigned char* data, camera* cam, hitable* world)
 {
-	vec3 lookfrom(13.0f, 2.0f, 3.0f);
-	vec3 lookat(0.0f, 0.0f, 0.0f);
-	float aspect = float(width) / float(height);
-	float dist_to_focus = 10.0f;
-	float aperture = 0.1f;
-
-	hitable* world = random_scene();
-	camera cam(lookfrom, lookat, vec3(0.0f, 1.0f, 0.0f), 90.0f / 4.0f, aspect, aperture, dist_to_focus);
-
-	unsigned char* data = new unsigned char[width * height * 3];
-	unsigned idx = 0;
-	for (int y = 0; y < height; ++y)
+	for (int y = start_y; y < end_y; ++y)
 	{
-		for (int x = 0; x < width; ++x)
+		for (int x = start_x; x < end_x; ++x)
 		{
 			vec3 col(0.0f, 0.0f, 0.0f);
 			for (int s = 0; s < samples; ++s)
 			{
 				float u = float(x + random() - 0.5f) / float(width);
 				float v = float(y + random() - 0.5f) / float(height);
-				ray r = cam.get_ray(u, v);
+				ray r = cam->get_ray(u, v);
 				col += color(r, world, 0);
 			}
 			col /= float(samples);
@@ -116,6 +106,42 @@ int main()
 			data[3 * (y * width + x) + 1] = ig;
 			data[3 * (y * width + x) + 2] = ib;
 		}
+	}
+}
+
+int main()
+{
+	vec3 lookfrom(13.0f, 2.0f, 3.0f);
+	vec3 lookat(0.0f, 0.0f, 0.0f);
+	float aspect = float(width) / float(height);
+	float dist_to_focus = 10.0f;
+	float aperture = 0.1f;
+
+	unsigned int num_threads = std::thread::hardware_concurrency();
+	num_threads = num_threads == 0 ? 1 : num_threads;
+	std::thread* threads = new std::thread[num_threads * num_threads];
+
+	hitable* world = random_scene();
+	camera* cam = new camera(lookfrom, lookat, vec3(0.0f, 1.0f, 0.0f), 90.0f / 4.0f, aspect, aperture, dist_to_focus);
+
+	unsigned char* data = new unsigned char[width * height * 3];
+
+	for (int y = 0; y < num_threads; ++y)
+	{
+		for (int x = 0; x < num_threads; ++x)
+		{
+			int start_x = float(x * width) / float(num_threads);
+			int end_x = float((x + 1) * width) / float(num_threads);
+			int start_y = float(y * height) / float(num_threads);
+			int end_y = float((y + 1) * height) / float(num_threads);
+
+			threads[y * num_threads + x] = std::thread(render, start_x, end_x, start_y, end_y, data, cam, world);
+		}
+	}
+
+	for (int i = 0; i < num_threads * num_threads; ++i)
+	{
+		threads[i].join();
 	}
 
 	stbi_flip_vertically_on_write(true);
