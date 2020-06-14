@@ -2,11 +2,6 @@
 
 #include "material.h"
 
-vec3 reflect(const vec3& v, const vec3& n)
-{
-	return v - 2.0f * dot(v, n) * n;
-}
-
 class metal : public material
 {
 private:
@@ -14,7 +9,7 @@ private:
 	float fuzz;
 
 public:
-	metal(const vec3& a, float f) : albedo(a)
+	metal(const vec3& a, float f=0.0f) : albedo(a)
 	{
 		if (f < 1.0f)
 			fuzz = f;
