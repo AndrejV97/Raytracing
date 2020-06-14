@@ -45,12 +45,13 @@ vec3 color(const ray& r, hitable* world, int depth)
 
 int main()
 {
-	const unsigned int num_spheres = 4;
+	const unsigned int num_spheres = 5;
 	hitable* list[num_spheres];
-	list[0] = new sphere(vec3( 0.0f,    0.0f, -1.0f),   0.5f, new lambertian(vec3(0.1f, 0.2f, 0.5f)));
-	list[1] = new sphere(vec3( 0.0f, -100.5f, -1.0f), 100.0f, new lambertian(vec3(0.8f, 0.8f, 0.0f)));
-	list[2] = new sphere(vec3( 1.0f,    0.0f, -1.0f),   0.5f,      new metal(vec3(0.8f, 0.6f, 0.2f)));
-	list[3] = new sphere(vec3(-1.0f,    0.0f, -1.0f),   0.5f, new dielectric(1.5f));
+	list[0] = new sphere(vec3( 0.0f,    0.0f, -1.0f),   0.5f,  new lambertian(vec3(0.1f, 0.2f, 0.5f)));
+	list[1] = new sphere(vec3( 0.0f, -100.5f, -1.0f), 100.0f,  new lambertian(vec3(0.8f, 0.8f, 0.0f)));
+	list[2] = new sphere(vec3( 1.0f,    0.0f, -1.0f),   0.5f,  new metal(vec3(0.8f, 0.6f, 0.2f), 0.3f));
+	list[3] = new sphere(vec3(-1.0f,    0.0f, -1.0f),   0.5f,  new dielectric(1.5f));
+	list[4] = new sphere(vec3(-1.0f,    0.0f, -1.0f),  -0.45f, new dielectric(1.5f));
 
 	hitable* world = new hitable_list(list, num_spheres);
 	camera cam;
