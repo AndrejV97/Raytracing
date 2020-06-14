@@ -15,8 +15,8 @@
 #include "dielectric.h"
 
 
-const unsigned int width = 1920;
-const unsigned int height = 1080;
+const unsigned int width = 640;
+const unsigned int height = 480;
 const unsigned int channels = 3;
 const unsigned int samples = 10;
 
