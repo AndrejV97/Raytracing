@@ -9,6 +9,8 @@
 #include "sphere.h"
 #include "hitable_list.h"
 #include "camera.h"
+#include "lambertian.h"
+#include "metal.h"
 
 
 const unsigned int width = 200;
@@ -16,29 +18,21 @@ const unsigned int height = 100;
 const unsigned int channels = 3;
 const unsigned int samples = 100;
 
-double random()
-{
-	return (double)rand() / RAND_MAX;
-}
-
-vec3 random_in_unit_sphere()
-{
-	vec3 p;
-	do
-	{
-		p = vec3(random(), random(), random()) - vec3(0.5f, 0.5f, 0.5f);
-	}
-	while (p.squared_length() >= 1.0f);
-	return p;
-}
-
-vec3 color(const ray& r, hitable* world)
+vec3 color(const ray& r, hitable* world, int depth)
 {
 	hit_record rec;
 	if (world->hit(r, 0.001f, std::numeric_limits<float>::max(), rec))
 	{
-		vec3 target = rec.p + rec.normal + random_in_unit_sphere();
-		return 0.5f * color(ray(rec.p, target - rec.p), world);
+		ray scattered;
+		vec3 attenuation;
+		if (depth < 50 && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+		{
+			return attenuation * color(scattered, world, depth + 1);
+		}
+		else
+		{
+			return vec3(0.0f, 0.0f, 0.0f);
+		}
 	}
 	else
 	{
@@ -50,11 +44,14 @@ vec3 color(const ray& r, hitable* world)
 
 int main()
 {
-	hitable* list[2];
-	list[0] = new sphere(vec3(0.0f, 0.0f, -1.0f), 0.5f);
-	list[1] = new sphere(vec3(0.0f, -100.5f, -1.0f), 100.0f);
+	const unsigned int num_spheres = 4;
+	hitable* list[num_spheres];
+	list[0] = new sphere(vec3( 0.0f,    0.0f, -1.0f),   0.5f, new lambertian(vec3(0.8f, 0.3f, 0.3f)));
+	list[1] = new sphere(vec3( 0.0f, -100.5f, -1.0f), 100.0f, new lambertian(vec3(0.8f, 0.8f, 0.0f)));
+	list[2] = new sphere(vec3( 1.0f,    0.0f, -1.0f),   0.5f,      new metal(vec3(0.8f, 0.6f, 0.2f)));
+	list[3] = new sphere(vec3(-1.0f,    0.0f, -1.0f),   0.5f,      new metal(vec3(0.8f, 0.8f, 0.8f)));
 
-	hitable* world = new hitable_list(list, 2);
+	hitable* world = new hitable_list(list, num_spheres);
 	camera cam;
 
 	unsigned char data[width * height * 3];
@@ -69,7 +66,7 @@ int main()
 				float u = float(x + random() - 0.5f) / float(width);
 				float v = float(y + random() - 0.5f) / float(height);
 				ray r = cam.get_ray(u, v);
-				col += color(r, world);
+				col += color(r, world, 0);
 			}
 			col /= float(samples);
 			col = vec3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
